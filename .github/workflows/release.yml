@@ -13,7 +13,7 @@ on:
 jobs:
   build:
     name: Build ${{ matrix.targets.name }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.targets.runner }}
     strategy:
       fail-fast: false
       matrix:
@@ -22,32 +22,41 @@ jobs:
           - platform: linux/amd64
             image: amd64/alpine:latest
             name: linux-x86_64-musl
+            runner: ubuntu-24.04
           - platform: linux/arm64
             image: arm64v8/alpine:latest
             name: linux-aarch64-musl
+            runner: ubuntu-24.04-arm
           - platform: linux/arm/v7
             image: arm32v7/alpine:latest
             name: linux-armv7-musl
+            runner: ubuntu-24.04-arm
           - platform: linux/ppc64le
             image: ppc64le/alpine:latest
             name: linux-ppc64le-musl
+            runner: ubuntu-24.04
           - platform: linux/riscv64
             image: riscv64/alpine:edge
             name: linux-riscv64-musl
+            runner: ubuntu-24.04
           - platform: linux/s390x
             image: s390x/alpine:latest
             name: linux-s390x-musl
+            runner: ubuntu-24.04
           # Ubuntu (glibc)
           - platform: linux/amd64
             image: amd64/ubuntu:24.04
             name: linux-x86_64-gnu
+            runner: ubuntu-24.04
           - platform: linux/arm64
             image: arm64v8/ubuntu:24.04
             name: linux-aarch64-gnu
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v6
 
       - name: Set up QEMU
+        if: matrix.targets.runner == 'ubuntu-24.04'
         uses: docker/setup-qemu-action@v3
 
       - name: Setup ccache
