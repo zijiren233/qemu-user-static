@@ -45,7 +45,7 @@ jobs:
             image: arm64v8/ubuntu:24.04
             name: linux-aarch64-gnu
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
