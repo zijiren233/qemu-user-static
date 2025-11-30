@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'QEMU version to build, like 10.2.0-rc1'
+        description: "QEMU version to build, like 10.2.0-rc1"
         required: false
   push:
     tags:

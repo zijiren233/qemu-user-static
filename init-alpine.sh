@@ -40,4 +40,3 @@ apk add --no-cache \
     tar \
     pcre2-static \
     bash
-    

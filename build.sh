@@ -2,10 +2,10 @@
 
 set -e
 
-VERSION="${1:-}"
+QEMU_VERSION="${1:-}"
 
-if [ -z "$VERSION" ]; then
-    echo "Error: VERSION is required" >&2
+if [ -z "$QEMU_VERSION" ]; then
+    echo "Error: QEMU_VERSION is required" >&2
     echo "Usage: $0 <version>" >&2
     exit 1
 fi
@@ -42,11 +42,11 @@ install_deps() {
 
 install_deps
 
-rm -f "qemu-${VERSION}.tar.xz"
-rm -rf "qemu-${VERSION}"
-wget "https://download.qemu.org/qemu-${VERSION}.tar.xz"
-tar xJf "qemu-${VERSION}.tar.xz"
-cd "qemu-${VERSION}"
+rm -f "qemu-${QEMU_VERSION}.tar.xz"
+rm -rf "qemu-${QEMU_VERSION}"
+wget "https://download.qemu.org/qemu-${QEMU_VERSION}.tar.xz"
+tar xJf "qemu-${QEMU_VERSION}.tar.xz"
+cd "qemu-${QEMU_VERSION}"
 
 # Apply musl patches from Alpine Linux
 PATCH_DIR="$SCRIPT_DIR/patchs"
