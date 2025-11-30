@@ -28,4 +28,6 @@ apt install -y \
     libtool \
     make \
     patch \
-    python3
+    python3 \
+    wget \
+    bash

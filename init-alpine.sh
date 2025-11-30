@@ -38,4 +38,6 @@ apk add --no-cache \
     musl-dev \
     perl \
     tar \
-    pcre2-static
+    pcre2-static \
+    bash
+    
