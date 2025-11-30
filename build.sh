@@ -115,4 +115,4 @@ make -j$(nproc)
 make install
 rm -rf "$PWD/qemu-user-static/share"
 rm -f "$PWD/qemu-user-static.tgz"
-tar -zcf "$PWD/qemu-user-static.tgz" "$PWD/qemu-user-static"
+tar -zcf "$PWD/qemu-user-static.tgz" -C "$PWD/qemu-user-static"
