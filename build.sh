@@ -57,7 +57,13 @@ for patch in "$PATCH_DIR"/*.patch; do
         patch -p1 <"$patch"
     fi
 done
-
+# Setup ccache if available
+if command -v ccache >/dev/null 2>&1; then
+    echo "Enabling ccache..."
+    export CC="ccache gcc"
+    export CXX="ccache g++"
+    ccache --show-stats || true
+fi
 export CFLAGS="$CFLAGS -static --static -O2"
 export CXXFLAGS="$CXXFLAGS -static --static -O2"
 export CPPFLAGS="$CPPFLAGS -static --static -O2"

@@ -50,6 +50,14 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
+      - name: Setup ccache
+        uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: ccache-${{ matrix.targets.name }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ matrix.targets.name }}-
+
       - name: Build
         id: build
         run: |
@@ -64,7 +72,9 @@ jobs:
           docker run --rm \
             --platform ${{ matrix.targets.platform }} \
             --volume "${PWD}:/build" \
+            --volume "${PWD}/.ccache:/root/.ccache" \
             --workdir /build \
+            -e CCACHE_DIR=/root/.ccache \
             ${{ matrix.targets.image }} \
             /bin/sh -c "sh build.sh ${VERSION}"
 

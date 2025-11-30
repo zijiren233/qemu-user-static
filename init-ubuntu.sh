@@ -30,4 +30,5 @@ apt install -y \
     patch \
     python3 \
     wget \
-    bash
+    bash \
+    ccache

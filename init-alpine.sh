@@ -39,4 +39,5 @@ apk add --no-cache \
     perl \
     tar \
     pcre2-static \
-    bash
+    bash \
+    ccache
