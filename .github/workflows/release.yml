@@ -1,0 +1,86 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'QEMU version to build, like 10.2.0-rc1'
+        required: false
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    name: Build ${{ matrix.targets.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        targets:
+          # Alpine (musl)
+          - platform: linux/amd64
+            image: amd64/alpine:latest
+            name: linux-x86_64-musl
+          - platform: linux/arm64
+            image: arm64v8/alpine:latest
+            name: linux-aarch64-musl
+          - platform: linux/arm/v7
+            image: arm32v7/alpine:latest
+            name: linux-armv7-musl
+          - platform: linux/ppc64le
+            image: ppc64le/alpine:latest
+            name: linux-ppc64le-musl
+          - platform: linux/riscv64
+            image: riscv64/alpine:edge
+            name: linux-riscv64-musl
+          - platform: linux/s390x
+            image: s390x/alpine:latest
+            name: linux-s390x-musl
+          # Ubuntu (glibc)
+          - platform: linux/amd64
+            image: amd64/ubuntu:24.04
+            name: linux-x86_64-gnu
+          - platform: linux/arm64
+            image: arm64v8/ubuntu:24.04
+            name: linux-aarch64-gnu
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build
+        id: build
+        run: |
+          # Get version from tag (v10.2.0-rc1 -> 10.2.0-rc1) or input
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+          else
+            VERSION="${{ inputs.version }}"
+          fi
+
+          docker run --rm \
+            --platform ${{ matrix.targets.platform }} \
+            --volume "${PWD}:/build" \
+            --workdir /build \
+            ${{ matrix.targets.image }} \
+            /bin/sh -c "sh build.sh ${VERSION}"
+
+          cp qemu-*/qemu-user-static.tgz qemu-user-static-${{ matrix.targets.name }}.tgz
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-user-static-${{ matrix.targets.name }}
+          path: qemu-user-static-${{ matrix.targets.name }}.tgz
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "${{ github.ref_name }}" --repo ${{ github.repository }} || \
+            gh release create "${{ github.ref_name }}" --repo ${{ github.repository }} --title "${{ github.ref_name }}" --notes "Release ${{ github.ref_name }}" || true
+          gh release upload "${{ github.ref_name }}" *.tgz --clobber --repo ${{ github.repository }}

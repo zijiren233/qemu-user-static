@@ -1,0 +1,13 @@
+# QEMU source directories
+qemu-*/
+qemu-*.xz
+
+# QEMU source tarballs
+*.tar.xz
+
+# Build outputs
+qemu-user-static/
+*.tgz
+
+# Claude Code
+.claude/
