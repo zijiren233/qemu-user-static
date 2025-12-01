@@ -64,23 +64,28 @@ if command -v ccache >/dev/null 2>&1; then
     export CXX="ccache g++"
     ccache --show-stats || true
 fi
-export CFLAGS="$CFLAGS -static --static -O2"
-export CXXFLAGS="$CXXFLAGS -static --static -O2"
-export CPPFLAGS="$CPPFLAGS -static --static -O2"
+export CFLAGS="$CFLAGS -O2"
+export CXXFLAGS="$CXXFLAGS -O2"
+export CPPFLAGS="$CPPFLAGS -O2"
 
 ./configure \
     --prefix="$PWD/qemu-user-static" \
     --bindir="$PWD/qemu-user-static" \
-    --static \
-    --disable-kvm \
-    --disable-vnc \
+    --enable-linux-user \
     --disable-system \
+    --static \
+    --disable-vnc \
+    --disable-kvm \
     --disable-brlapi \
     --disable-bpf \
     --disable-cap-ng \
     --disable-capstone \
     --disable-curl \
     --disable-curses \
+    --disable-docs \
+    --disable-gcrypt \
+    --disable-gnutls \
+    --disable-gtk \
     --disable-guest-agent \
     --disable-guest-agent-msi \
     --disable-libnfs \
@@ -90,26 +95,12 @@ export CPPFLAGS="$CPPFLAGS -static --static -O2"
     --disable-sdl \
     --disable-spice \
     --disable-tools \
-    --disable-docs \
-    --disable-gcrypt \
-    --disable-gnutls \
-    --disable-gtk \
-    --enable-linux-user \
-    --disable-libvduse \
-    --disable-vhost-kernel \
-    --disable-vhost-net \
-    --disable-vhost-user \
-    --disable-vhost-vdpa \
-    --disable-qom-cast-debug \
-    --disable-debug-info \
     --enable-strip \
-    --disable-debug-tcg \
-    --disable-tpm \
-    --disable-selinux \
-    --disable-attr \
-    --disable-membarrier \
     --disable-install-blobs \
-    --disable-relocatable
+    --disable-glusterfs \
+    --disable-debug-info \
+    --disable-bsd-user \
+    --disable-werror
 
 make -j$(nproc)
 make install
