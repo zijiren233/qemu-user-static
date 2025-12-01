@@ -105,5 +105,10 @@ export CPPFLAGS="$CPPFLAGS -O2"
 make -j$(nproc)
 make install
 rm -rf "$PWD/qemu-user-static/share"
+
+# Copy register script and binfmt config
+cp "$SCRIPT_DIR/register.sh" "$PWD/qemu-user-static/"
+cp "$PWD/scripts/qemu-binfmt-conf.sh" "$PWD/qemu-user-static/"
+
 rm -f "$PWD/qemu-user-static.tgz"
 tar -zcf "$PWD/qemu-user-static.tgz" -C "$PWD/qemu-user-static" .

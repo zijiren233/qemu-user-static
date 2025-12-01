@@ -103,3 +103,131 @@ jobs:
           gh release view "${{ github.ref_name }}" --repo ${{ github.repository }} || \
             gh release create "${{ github.ref_name }}" --repo ${{ github.repository }} --title "${{ github.ref_name }}" --notes "Release ${{ github.ref_name }}" || true
           gh release upload "${{ github.ref_name }}" *.tgz --clobber --repo ${{ github.repository }}
+
+  docker:
+    name: Docker ${{ matrix.docker.name }}
+    runs-on: ${{ matrix.docker.runner }}
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        docker:
+          - name: linux-x86_64-musl
+            artifact: linux-x86_64-musl
+            platform: linux/amd64
+            runner: ubuntu-24.04
+          - name: linux-aarch64-musl
+            artifact: linux-aarch64-musl
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+          - name: linux-armv7-musl
+            artifact: linux-armv7-musl
+            platform: linux/arm/v7
+            runner: ubuntu-24.04-arm
+          - name: linux-ppc64le-musl
+            artifact: linux-ppc64le-musl
+            platform: linux/ppc64le
+            runner: ubuntu-24.04
+          - name: linux-riscv64-musl
+            artifact: linux-riscv64-musl
+            platform: linux/riscv64
+            runner: ubuntu-24.04
+          - name: linux-s390x-musl
+            artifact: linux-s390x-musl
+            platform: linux/s390x
+            runner: ubuntu-24.04
+          - name: linux-x86_64-gnu
+            artifact: linux-x86_64-gnu
+            platform: linux/amd64
+            runner: ubuntu-24.04
+          - name: linux-aarch64-gnu
+            artifact: linux-aarch64-gnu
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Download artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: qemu-user-static-${{ matrix.docker.artifact }}
+          path: artifacts
+
+      - name: Prepare docker context
+        run: |
+          mkdir -p docker-context
+          tar -xzf artifacts/qemu-user-static-${{ matrix.docker.artifact }}.tgz -C docker-context
+          cp Dockerfile docker-context/
+
+      - name: Set up QEMU
+        if: matrix.docker.runner == 'ubuntu-24.04'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: docker-context
+          push: true
+          platforms: ${{ matrix.docker.platform }}
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}-${{ matrix.docker.name }}
+            ghcr.io/${{ github.repository }}:${{ matrix.docker.name }}
+
+  docker-manifest:
+    name: Create Docker Manifest
+    runs-on: ubuntu-24.04
+    needs: docker
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      packages: write
+    steps:
+      - name: Get version
+        id: version
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push manifests
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          REPO="ghcr.io/${{ github.repository }}"
+
+          MUSL_IMAGES="${REPO}:linux-x86_64-musl ${REPO}:linux-aarch64-musl ${REPO}:linux-armv7-musl ${REPO}:linux-ppc64le-musl ${REPO}:linux-riscv64-musl ${REPO}:linux-s390x-musl"
+          GNU_IMAGES="${REPO}:linux-x86_64-gnu ${REPO}:linux-aarch64-gnu"
+
+          for tag in latest musl ${VERSION}; do
+            docker manifest create ${REPO}:${tag} ${MUSL_IMAGES}
+            docker manifest push ${REPO}:${tag}
+          done
+
+          docker manifest create ${REPO}:gnu ${GNU_IMAGES}
+          docker manifest push ${REPO}:gnu
