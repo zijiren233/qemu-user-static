@@ -190,6 +190,7 @@ jobs:
           context: docker-context
           push: true
           platforms: ${{ matrix.docker.platform }}
+          provenance: false
           tags: |
             ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}-${{ matrix.docker.name }}
             ghcr.io/${{ github.repository }}:${{ matrix.docker.name }}
