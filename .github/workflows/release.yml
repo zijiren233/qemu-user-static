@@ -246,9 +246,16 @@ jobs:
           MUSL_IMAGES="${REPO}:linux-x86_64-musl ${REPO}:linux-aarch64-musl ${REPO}:linux-armv7-musl ${REPO}:linux-ppc64le-musl ${REPO}:linux-riscv64-musl ${REPO}:linux-s390x-musl"
           GNU_IMAGES="${REPO}:linux-x86_64-gnu ${REPO}:linux-aarch64-gnu"
 
-          # Create version-specific manifest
+          # Create version-specific manifest (default uses musl)
           docker manifest create ${REPO}:${VERSION} ${MUSL_IMAGES}
           docker manifest push ${REPO}:${VERSION}
+
+          # Create version-specific musl and gnu manifests (for both rc and non-rc)
+          docker manifest create ${REPO}:${VERSION}-musl ${MUSL_IMAGES}
+          docker manifest push ${REPO}:${VERSION}-musl
+
+          docker manifest create ${REPO}:${VERSION}-gnu ${GNU_IMAGES}
+          docker manifest push ${REPO}:${VERSION}-gnu
 
           # Only create latest and musl manifests for non-rc versions
           if [[ "${IS_RC}" == "false" ]]; then
