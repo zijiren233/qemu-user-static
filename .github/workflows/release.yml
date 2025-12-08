@@ -243,27 +243,30 @@ jobs:
           REPO="ghcr.io/${{ github.repository }}"
           IS_RC="${{ steps.version.outputs.is_rc }}"
 
-          MUSL_IMAGES="${REPO}:linux-x86_64-musl ${REPO}:linux-aarch64-musl ${REPO}:linux-armv7-musl ${REPO}:linux-ppc64le-musl ${REPO}:linux-riscv64-musl ${REPO}:linux-s390x-musl"
-          GNU_IMAGES="${REPO}:linux-x86_64-gnu ${REPO}:linux-aarch64-gnu"
+          # Use version-prefixed image tags (these are always created by docker job)
+          MUSL_IMAGES="${REPO}:${VERSION}-linux-x86_64-musl ${REPO}:${VERSION}-linux-aarch64-musl ${REPO}:${VERSION}-linux-armv7-musl ${REPO}:${VERSION}-linux-ppc64le-musl ${REPO}:${VERSION}-linux-riscv64-musl ${REPO}:${VERSION}-linux-s390x-musl"
+          GNU_IMAGES="${REPO}:${VERSION}-linux-x86_64-gnu ${REPO}:${VERSION}-linux-aarch64-gnu"
 
-          # Create version-specific manifest (default uses musl)
+          # Create version-specific manifests (for both rc and non-rc)
           docker manifest create ${REPO}:${VERSION} ${MUSL_IMAGES}
           docker manifest push ${REPO}:${VERSION}
 
-          # Create version-specific musl and gnu manifests (for both rc and non-rc)
           docker manifest create ${REPO}:${VERSION}-musl ${MUSL_IMAGES}
           docker manifest push ${REPO}:${VERSION}-musl
 
           docker manifest create ${REPO}:${VERSION}-gnu ${GNU_IMAGES}
           docker manifest push ${REPO}:${VERSION}-gnu
 
-          # Only create latest and musl manifests for non-rc versions
+          # Only create latest/musl/gnu and unversioned arch tags for non-rc versions
           if [[ "${IS_RC}" == "false" ]]; then
+            MUSL_UNVERSIONED="${REPO}:linux-x86_64-musl ${REPO}:linux-aarch64-musl ${REPO}:linux-armv7-musl ${REPO}:linux-ppc64le-musl ${REPO}:linux-riscv64-musl ${REPO}:linux-s390x-musl"
+            GNU_UNVERSIONED="${REPO}:linux-x86_64-gnu ${REPO}:linux-aarch64-gnu"
+
             for tag in latest musl; do
-              docker manifest create ${REPO}:${tag} ${MUSL_IMAGES}
+              docker manifest create ${REPO}:${tag} ${MUSL_UNVERSIONED}
               docker manifest push ${REPO}:${tag}
             done
 
-            docker manifest create ${REPO}:gnu ${GNU_IMAGES}
+            docker manifest create ${REPO}:gnu ${GNU_UNVERSIONED}
             docker manifest push ${REPO}:gnu
           fi
