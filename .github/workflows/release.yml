@@ -73,10 +73,10 @@ jobs:
           # Get version from tag (v10.2.0-rc1 -> 10.2.0-rc1) or input
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             VERSION="${{ github.ref_name }}"
-            VERSION="${VERSION#v}"
           else
             VERSION="${{ inputs.version }}"
           fi
+          VERSION="${VERSION#v}"
 
           docker run --rm \
             --platform ${{ matrix.targets.platform }} \
