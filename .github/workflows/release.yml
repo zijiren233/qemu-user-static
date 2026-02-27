@@ -90,7 +90,7 @@ jobs:
           cp qemu-*/qemu-user-static.tgz qemu-user-static-${{ matrix.targets.name }}.tgz
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: qemu-user-static-${{ matrix.targets.name }}
           path: qemu-user-static-${{ matrix.targets.name }}.tgz
